@@ -1,6 +1,7 @@
 # Freshbooks API CLI
 
 Bored of using GUI to add time entries to Freshbooks? This should help.
+
 *NOTE:* This is a starting point. You can help by adding more methods, organizing code and implementing functionality and/or tests.
 
 ## Using it
