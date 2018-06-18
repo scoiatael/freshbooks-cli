@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"fmt"
 
 	"github.com/scoiatael/gofreshbooks"
@@ -19,25 +18,13 @@ func Present(projectList freshbooks.ProjectList, taskList freshbooks.TaskList) {
 }
 
 func main() {
-	projectListBytes, err := freshbooks.Do(freshbooks.Request{
-		Method: "project.list",
-	})
+	projectList, err := freshbooks.ListProjects()
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
-	}
-	projectList := freshbooks.ProjectList{}
-	if err := xml.Unmarshal(projectListBytes, &projectList); err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
 
-	taskListBytes, err := freshbooks.Do(freshbooks.Request{
-		Method: "task.list",
-	})
+	taskList, err := freshbooks.ListTasks()
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
-	}
-	taskList := freshbooks.TaskList{}
-	if err := xml.Unmarshal(taskListBytes, &taskList); err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
 
