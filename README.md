@@ -15,10 +15,10 @@ Bored of using GUI to add time entries to Freshbooks? This should help.
 ### Creating time entries
 * Create CSV file with time entries named `entries.csv`, e.g:
 ```
-project_id,task_id,hours,notes,date
-123091,140292,1.5,"[Feature] Foo",2018-06-11
-123091,140292,1.5,"[Feature] Bar",2018-06-12
-123091,140292,4.5,"[Feature] And this CLI",2018-06-13
+project_name,task_name,hours,notes,date
+Labs,General,1.5,"[Feature] Foo",2018-06-11
+SecretProject,Learning,1.5,"[Feature] Bar",2018-06-12
+WorldDomination,Research,4.5,"[Feature] And this CLI",2018-06-13
 ```
 
 * `go run cmd/freshbooks-create-entries/main.go` - it'll create entries from file.

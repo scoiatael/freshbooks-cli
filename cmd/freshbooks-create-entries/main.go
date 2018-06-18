@@ -27,27 +27,49 @@ func (date *Date) UnmarshalCSV(csv string) (err error) {
 }
 
 type TimeEntry struct {
-	Id        string  `csv:"id"`
-	ProjectId string  `csv:"project_id"`
-	TaskId    string  `csv:"task_id"`
-	Hours     float64 `csv:"hours"`
-	Notes     string  `csv:"notes"`
-	Date      Date    `csv:"date"`
+	Id      string  `csv:"id"`
+	Project string  `csv:"project_name"`
+	Task    string  `csv:"task_name"`
+	Hours   float64 `csv:"hours"`
+	Notes   string  `csv:"notes"`
+	Date    Date    `csv:"date"`
 }
 
-func main() {
-	entriesFile, err := os.OpenFile("entries.csv", os.O_RDWR, os.ModePerm)
-	if err != nil {
-		panic(err)
+func LoadEntries() (entries []TimeEntry, err error) {
+	entriesFile, maybeErr := os.OpenFile("entries.csv", os.O_RDWR, os.ModePerm)
+	if maybeErr != nil {
+		err = maybeErr
+		return
 	}
 	defer entriesFile.Close()
 
-	entries := []*TimeEntry{}
+	err = gocsv.UnmarshalFile(entriesFile, &entries)
+	return
+}
 
-	if err := gocsv.UnmarshalFile(entriesFile, &entries); err != nil {
-		panic(err)
+type ProjectName string
+type ProjectMap map[ProjectName]string
+
+func projectMap(projectList freshbooks.ProjectList) (ret ProjectMap) {
+	ret = make(ProjectMap)
+	for _, project := range projectList.Projects {
+		ret[ProjectName(project.Name)] = project.ID
 	}
+	return
+}
 
+type TaskName string
+type TaskMap map[TaskName]string
+
+func taskMap(taskList freshbooks.TaskList) (ret TaskMap) {
+	ret = make(TaskMap)
+	for _, task := range taskList.Tasks {
+		ret[TaskName(task.Name)] = task.ID
+	}
+	return
+}
+
+func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
 	for _, entry := range entries {
 		request := struct {
 			XMLName   xml.Name             `xml:"request"`
@@ -56,14 +78,38 @@ func main() {
 		}{
 			Method: "time_entry.create",
 			TimeEntry: freshbooks.TimeEntry{
-				ProjectId: entry.ProjectId,
-				TaskId:    entry.TaskId,
+				ProjectId: projects[ProjectName(entry.Project)],
+				TaskId:    tasks[TaskName(entry.Task)],
 				Hours:     entry.Hours,
 				Notes:     entry.Notes,
 				Date:      freshbooks.Date{entry.Date.Time},
 			},
 		}
+		// out, err := xml.MarshalIndent(request, " ", "  ")
+		// fmt.Printf("%v\n%s\n", err, out)
 		response, err := freshbooks.Do(request)
+		if err != nil {
+			return err
+		}
 		fmt.Printf("%+v\n%+s\n", err, response)
+	}
+	return nil
+}
+
+func main() {
+	projectList, err := freshbooks.ListProjects()
+	if err != nil {
+		fmt.Errorf("error: %v\n", err)
+	}
+	taskList, err := freshbooks.ListTasks()
+	if err != nil {
+		fmt.Errorf("error: %v\n", err)
+	}
+	entries, err := LoadEntries()
+	if err != nil {
+		fmt.Errorf("error: %v\n", err)
+	}
+	if err := Create(entries, projectMap(projectList), taskMap(taskList)); err != nil {
+		fmt.Errorf("error: %v\n", err)
 	}
 }
