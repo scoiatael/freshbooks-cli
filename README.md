@@ -6,7 +6,7 @@ Bored of using GUI to add time entries to Freshbooks? This should help.
 
 ## Using it
 ### Setup
-* export `AUTHENTICATION_TOKEN` and `FRESHBOOKS_API_URL` with values taken from `MyAccount > FreshBooks API page`. It has general address "https://<YOUR APP>.freshbooks.com/apiEnable".
+* export `AUTHENTICATION_TOKEN` and `FRESHBOOKS_API_URL` with values taken from `MyAccount > FreshBooks API page`. It has general address `https://<YOUR APP>.freshbooks.com/apiEnable`.
 
 
 ### Listing projects
