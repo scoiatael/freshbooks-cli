@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -35,8 +36,8 @@ type TimeEntry struct {
 	Date    Date    `csv:"date"`
 }
 
-func LoadEntries() (entries []TimeEntry, err error) {
-	entriesFile, maybeErr := os.OpenFile("entries.csv", os.O_RDWR, os.ModePerm)
+func LoadEntries(filename string) (entries []TimeEntry, err error) {
+	entriesFile, maybeErr := os.Open(filename)
 	if maybeErr != nil {
 		err = maybeErr
 		return
@@ -91,25 +92,29 @@ func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%+v\n%+s\n", err, response)
+		fmt.Printf("%+s\n", response)
 	}
 	return nil
 }
 
 func main() {
+	projectName := os.Args[0]
+	if len(os.Args) == 1 {
+		log.Fatalf("Usage: %s FILE\n", projectName)
+	}
 	projectList, err := freshbooks.ListProjects()
 	if err != nil {
-		fmt.Errorf("error: %v\n", err)
+		log.Fatalf("error: %v\n", err)
 	}
 	taskList, err := freshbooks.ListTasks()
 	if err != nil {
-		fmt.Errorf("error: %v\n", err)
+		log.Fatalf("error: %v\n", err)
 	}
-	entries, err := LoadEntries()
+	entries, err := LoadEntries(os.Args[1])
 	if err != nil {
-		fmt.Errorf("error: %v\n", err)
+		log.Fatalf("error: %v\n", err)
 	}
 	if err := Create(entries, projectMap(projectList), taskMap(taskList)); err != nil {
-		fmt.Errorf("error: %v\n", err)
+		log.Fatalf("error: %v\n", err)
 	}
 }
