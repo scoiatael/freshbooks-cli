@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"sync"
 
 	"github.com/gocarina/gocsv"
 	"github.com/scoiatael/gofreshbooks"
@@ -71,6 +72,7 @@ func taskMap(taskList freshbooks.TaskList) (ret TaskMap) {
 }
 
 func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
+	var wg sync.WaitGroup
 	for _, entry := range entries {
 		request := struct {
 			XMLName   xml.Name             `xml:"request"`
@@ -86,14 +88,18 @@ func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
 				Date:      freshbooks.Date{entry.Date.Time},
 			},
 		}
-		// out, err := xml.MarshalIndent(request, " ", "  ")
-		// fmt.Printf("%v\n%s\n", err, out)
-		response, err := freshbooks.Do(request)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%+s\n", response)
+		wg.Add(1)
+		go func() {
+			response, err := freshbooks.Do(request)
+			if err != nil {
+				fmt.Printf("%+v\n", err)
+			} else {
+				fmt.Printf("%+s\n", response)
+			}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	return nil
 }
 
