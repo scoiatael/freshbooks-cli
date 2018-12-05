@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"log"
 )
 
 type Request struct {
@@ -24,7 +26,7 @@ func Do(request interface{}) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	req, err := http.NewRequest("GET", api, bytes.NewReader(output))
+	req, err := http.NewRequest("POST", api, bytes.NewReader(output))
 	if err != nil {
 		return []byte{}, err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"fmt"
 
 	"github.com/scoiatael/gofreshbooks"
@@ -20,12 +21,12 @@ func Present(projectList freshbooks.ProjectList, taskList freshbooks.TaskList) {
 func main() {
 	projectList, err := freshbooks.ListProjects()
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		log.Fatalf("error: %v\n", err)
 	}
 
 	taskList, err := freshbooks.ListTasks()
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		log.Fatalf("error: %v\n", err)
 	}
 
 	Present(projectList, taskList)
