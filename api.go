@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-
-	"log"
 )
 
 type Request struct {
