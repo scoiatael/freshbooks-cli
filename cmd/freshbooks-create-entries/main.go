@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/gocarina/gocsv"
 	"github.com/scoiatael/gofreshbooks"
@@ -73,7 +73,16 @@ func taskMap(taskList freshbooks.TaskList) (ret TaskMap) {
 
 func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
 	var wg sync.WaitGroup
+	requests := make([]interface{}, 0, len(entries))
 	for _, entry := range entries {
+		projectId, ok := projects[ProjectName(entry.Project)]
+		if !ok {
+			return fmt.Errorf("Project %s not found; please check spelling", entry.Project)
+		}
+		taskId, ok := tasks[TaskName(entry.Task)]
+		if !ok {
+			return fmt.Errorf("Task %s not found; please check spelling", entry.Task)
+		}
 		request := struct {
 			XMLName   xml.Name             `xml:"request"`
 			Method    string               `xml:"method,attr"`
@@ -81,15 +90,18 @@ func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
 		}{
 			Method: "time_entry.create",
 			TimeEntry: freshbooks.TimeEntry{
-				ProjectId: projects[ProjectName(entry.Project)],
-				TaskId:    tasks[TaskName(entry.Task)],
+				ProjectId: projectId,
+				TaskId:    taskId,
 				Hours:     entry.Hours,
 				Notes:     entry.Notes,
 				Date:      freshbooks.Date{entry.Date.Time},
 			},
 		}
+		requests = append(requests, request)
+	}
+	for _, request := range requests {
 		wg.Add(1)
-		go func() {
+		go func(request interface{}) {
 			response, err := freshbooks.Do(request)
 			if err != nil {
 				fmt.Printf("%+v\n", err)
@@ -97,7 +109,7 @@ func Create(entries []TimeEntry, projects ProjectMap, tasks TaskMap) error {
 				fmt.Printf("%+s\n", response)
 			}
 			wg.Done()
-		}()
+		}(request)
 	}
 	wg.Wait()
 	return nil
